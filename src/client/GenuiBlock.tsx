@@ -69,7 +69,7 @@ function specEquivalent(a: GenuiSpec, b: GenuiSpec): boolean {
  * Render a GenUI spec as an inline block. Falls back to nothing when the spec
  * carries no items (the fence renderer already refused non-specs before us).
  */
-export const GenuiBlock = memo(function GenuiBlock({ spec, stateKey }: GenuiBlockProps) {
+export const GenuiBlock = memo(function GenuiBlock({ spec, stateKey, showTitle = true }: GenuiBlockProps) {
   const gap = spec.gap ?? 16
   const onAction = useDebouncedAction(useGenuiAction())
   // v2.5/v2.6 answers registry: grouped radios record selections + question
@@ -145,7 +145,7 @@ export const GenuiBlock = memo(function GenuiBlock({ spec, stateKey }: GenuiBloc
   }, [stateKey, answers, locked, fields, secretFields])
   return (
     <div className={css.block} data-genui>
-      {spec.title !== undefined && <div className={css.banner}>{spec.title}</div>}
+      {showTitle && spec.title !== undefined && <div className={css.banner}>{spec.title}</div>}
       <div className={css.col} style={{ gap: `${gap}px` }}>
         {spec.items.map((c, i) => (
           // Staggered reveal: each root item fades/slides in after its

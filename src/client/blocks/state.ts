@@ -22,6 +22,12 @@ export interface GenuiBlockProps {
    * localStorage and restores on refresh / re-render of the same content.
    */
   stateKey?: string | undefined
+  /**
+   * Whether the block renders its own title banner. Surfaces that already
+   * show the title themselves (the session panel dock's header) pass false so
+   * the title is not rendered twice.
+   */
+  showTitle?: boolean | undefined
 }
 
 /** Per-question metadata registered by grouped radios for local grading. */

@@ -1087,12 +1087,14 @@ button.ftNameBtn[aria-expanded] { cursor: pointer; }
 }
 
 .panelBody {
-  /* Default height; a drag on the resize handle above overrides it inline.
-     max-height would cap the user's drag, so the fixed height lives here and
-     JS takes over once the user resizes. */
-  height: 360px;
+  /* Auto height up to the default cap: a fixed 360px box left a large empty
+     hole under short specs. A drag on the resize handle pins an explicit
+     height inline (and lifts this cap) so the user's own size survives the
+     collapse/expand cycle. */
+  max-height: 360px;
   overflow-y: auto;
-  padding: 0 16px var(--dsl-g-gap-lg);
+  /* Top padding replaces the title banner's margin the panel suppresses. */
+  padding: 8px 16px var(--dsl-g-gap-lg);
 }
 
 /* Drag strip on the panel's TOP edge (above the header): vertical resize

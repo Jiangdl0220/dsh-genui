@@ -170,12 +170,17 @@ export function GenuiPanel({ sessionId, sendGenuiAction }: GenuiPanelProps) {
           ref={bodyRef}
           className={css.panelBody}
           data-genui-panel-body
-          style={bodyHeight === null ? undefined : { height: bodyHeight }}
+          style={bodyHeight === null ? undefined : { height: bodyHeight, maxHeight: 'none' }}
         >
           <GenuiActionContext.Provider value={sendGenuiAction}>
             <ErrorBoundary label="面板">
-              {/* content-fingerprinted: same panel spec re-published restores its state */}
-              <GenuiBlock spec={spec} stateKey={panelStateKey(sessionId, JSON.stringify(spec))} />
+              {/* content-fingerprinted: same panel spec re-published restores its state.
+                  showTitle=false: the header above already carries the title. */}
+              <GenuiBlock
+                spec={spec}
+                stateKey={panelStateKey(sessionId, JSON.stringify(spec))}
+                showTitle={false}
+              />
             </ErrorBoundary>
           </GenuiActionContext.Provider>
         </div>
