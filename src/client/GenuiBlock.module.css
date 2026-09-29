@@ -1162,3 +1162,92 @@ button.ftNameBtn[aria-expanded] { cursor: pointer; }
 .panelResizeHandleActive {
   background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4f8ef7) 35%, transparent);
 }
+
+/* ---------- heatmap ---------- */
+
+.heatmap { display: flex; flex-direction: column; gap: var(--dsl-g-gap-sm); }
+.heatmapLabel { font-size: var(--dsl-g-font-title); font-weight: 600; color: var(--dsw-alias-label-primary); }
+.heatmapGrid { display: grid; gap: 3px; align-items: center; }
+.heatmapColLabel {
+  font-size: var(--dsl-g-font-data);
+  color: var(--dsw-alias-label-tertiary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heatmapRowLabel {
+  font-size: var(--dsl-g-font-data);
+  color: var(--dsw-alias-label-secondary);
+  padding-right: var(--dsl-g-gap-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heatmapCell {
+  height: 18px;
+  border-radius: 4px;
+  /* Floor tint: a cell at the low end is still visible as a cell. */
+  background: color-mix(in srgb, var(--dsl-g-accent) 8%, transparent);
+}
+.heatmapCell[data-empty='true'] { background: var(--dsw-alias-bg-module-platform, rgba(127, 127, 127, 0.08)); }
+.heatmapScale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dsl-g-gap-sm);
+  font-size: var(--dsl-g-font-data);
+  color: var(--dsw-alias-label-tertiary);
+}
+.heatmapHint { opacity: 0.75; }
+
+/* ---------- gantt ---------- */
+
+.gantt { display: flex; flex-direction: column; gap: var(--dsl-g-gap-sm); }
+.ganttTitle { font-size: var(--dsl-g-font-title); font-weight: 600; color: var(--dsw-alias-label-primary); }
+.ganttRows { display: flex; flex-direction: column; gap: 6px; }
+.ganttRow,
+.ganttAxis {
+  display: grid;
+  grid-template-columns: minmax(88px, max-content) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--dsl-g-gap-sm);
+}
+.ganttLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--dsl-g-font-data);
+  color: var(--dsw-alias-label-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ganttGroup {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--dsl-g-font-data);
+  background: color-mix(in srgb, var(--dsl-g-accent) var(--dsl-g-tint), transparent);
+  color: var(--dsl-g-accent);
+}
+.ganttTrack {
+  position: relative;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--dsw-alias-bg-module-platform, rgba(127, 127, 127, 0.08));
+}
+.ganttBar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  min-width: 3px;
+  border-radius: 4px;
+  background: var(--dsl-g-accent);
+}
+.ganttAxisTicks {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--dsl-g-font-data);
+  color: var(--dsw-alias-label-tertiary);
+}

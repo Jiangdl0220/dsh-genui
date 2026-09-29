@@ -37,6 +37,14 @@ const spec = {
       items: [{ name: 'src', type: 'dir', children: [{ name: 'index.ts', type: 'file' }] }],
     },
     { type: 'row', items: [{ type: 'badge', label: 'beta' }, { type: 'stat', label: '耗时', value: '1s', delta: '-20%' }] },
+    {
+      type: 'heatmap',
+      rows: ['周一'],
+      columns: ['上午', '下午'],
+      values: [[1, null]],
+      unit: '次',
+    },
+    { type: 'gantt', items: [{ label: '设计', start: 0, end: 3, group: '阶段一' }], unit: '天' },
     { type: 'breadcrumb', items: ['首页', '设置'] },
   ],
 }
@@ -57,6 +65,8 @@ const cases = [
   ['quiz 保留选项与解析', md.includes('**哪个对？**') && md.includes('A. 甲') && md.includes('> 解析：甲对')],
   ['file-tree 嵌套', md.includes('- 📁 src') && md.includes('  - 📄 index.ts')],
   ['row 内联连接', md.includes('`beta` · **耗时** 1s (-20%)')],
+  ['热力图转矩阵表格，空格用 —', md.includes('| 周一 | 1次 | — |')],
+  ['甘特图成清单', md.includes('- 设计：0 – 3天（阶段一）')],
   ['面包屑', md.includes('首页 › 设置')],
 ]
 

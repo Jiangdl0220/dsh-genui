@@ -48,6 +48,8 @@ export type GenuiNode =
   | GenuiMermaid
   | GenuiScene3D
   | GenuiTimeline
+  | GenuiHeatmap
+  | GenuiGantt
   | GenuiFileTree
   | GenuiBreadcrumb
   | GenuiQuiz
@@ -504,6 +506,45 @@ export interface GenuiTimelineItem {
 export interface GenuiTimeline {
   type: 'timeline'
   items: GenuiTimelineItem[]
+}
+
+/** One row-major matrix of numbers plus its axis labels. `values[r][c]`
+ * belongs to `rows[r]` × `columns[c]`; a missing cell renders as empty. */
+export interface GenuiHeatmap {
+  type: 'heatmap'
+  rows: string[]
+  columns: string[]
+  values: number[][]
+  /** Optional legend caption, e.g. 「每日请求量」. */
+  label?: string
+  /** Optional unit suffix shown in cell tooltips / legend. */
+  unit?: string
+  /** Manual intensity bounds; absent = derived from the data. */
+  min?: number
+  max?: number
+}
+
+/** One scheduled bar: `start`/`end` are numbers in the caller's own unit
+ * (day index, hour, sprint number — whatever the axis ticks mean). */
+export interface GenuiGanttItem {
+  label: string
+  start: number
+  end: number
+  /** Optional lane grouping label. */
+  group?: string
+  /** Bar color; the palette assigns one per group when absent. */
+  color?: string
+}
+
+export interface GenuiGantt {
+  type: 'gantt'
+  items: GenuiGanttItem[]
+  /** Axis bounds; absent = derived from the items. */
+  min?: number
+  max?: number
+  /** Axis unit label, e.g. 「天」. */
+  unit?: string
+  title?: string
 }
 
 export interface GenuiFileTreeNode {

@@ -18,7 +18,7 @@
  * - The whole spec carries a node budget; once exhausted, remaining siblings
  *   are elided.
  */
-import type { GenuiFileTreeNode, GenuiList, GenuiNode, GenuiPlot, GenuiPlotSeries, GenuiScene3D, GenuiSpec } from './spec.ts'
+import type { GenuiFileTreeNode, GenuiGanttItem, GenuiList, GenuiNode, GenuiPlot, GenuiPlotSeries, GenuiScene3D, GenuiSpec } from './spec.ts'
 
 /** Hard resource limits enforced by repair (and mirrored at render time). */
 export const GENUI_LIMITS = {
@@ -61,6 +61,11 @@ export const GENUI_LIMITS = {
   maxKeyValuePairs: 24,
   /** Maximum `file-tree` nesting. */
   maxTreeDepth: 6,
+  /** Maximum `heatmap` rows / columns. */
+  maxHeatmapRows: 20,
+  maxHeatmapCols: 20,
+  /** Maximum `gantt` bars. */
+  maxGanttItems: 30,
 } as const
 
 /** Result of `validateGenuiSpec`. */
@@ -421,6 +426,35 @@ function repairNode(value: unknown, ctx: RepairCtx, depth: number): GenuiNode | 
       if (items === undefined) return null
       return { type: 'timeline', items }
     }
+    case 'heatmap': {
+      const rows = repairAxis(v.rows, GENUI_LIMITS.maxHeatmapRows)
+      const columns = repairAxis(v.columns, GENUI_LIMITS.maxHeatmapCols)
+      const values = repairMatrix(v.values, GENUI_LIMITS.maxHeatmapRows, GENUI_LIMITS.maxHeatmapCols)
+      if (rows === undefined || columns === undefined || values === undefined) return null
+      if (rows.length === 0 || columns.length === 0) return null
+      return {
+        type: 'heatmap',
+        rows,
+        columns,
+        values,
+        ...opt('label', str(v.label, 256)),
+        ...opt('unit', str(v.unit, 32)),
+        ...opt('min', num(v.min, -1e9, 1e9)),
+        ...opt('max', num(v.max, -1e9, 1e9)),
+      }
+    }
+    case 'gantt': {
+      const items = repairGanttItems(v.items, GENUI_LIMITS.maxGanttItems)
+      if (items === undefined || items.length === 0) return null
+      return {
+        type: 'gantt',
+        items,
+        ...opt('min', num(v.min, -1e9, 1e9)),
+        ...opt('max', num(v.max, -1e9, 1e9)),
+        ...opt('unit', str(v.unit, 32)),
+        ...opt('title', str(v.title, 256)),
+      }
+    }
     case 'file-tree': {
       const items = repairTree(v.items, GENUI_LIMITS.maxListItems)
       if (items === undefined) return null
@@ -651,6 +685,52 @@ function tuple3(v: unknown): [number, number, number] | undefined {
   if (typeof a !== 'number' || !Number.isFinite(a) || typeof b !== 'number' || !Number.isFinite(b)
     || typeof c !== 'number' || !Number.isFinite(c)) return undefined
   return [Math.min(1e6, Math.max(-1e6, a)), Math.min(1e6, Math.max(-1e6, b)), Math.min(1e6, Math.max(-1e6, c))]
+}
+
+/** Axis labels for `heatmap`: plain capped strings. */
+function repairAxis(v: unknown, cap: number): string[] | undefined {
+  return repairStrings(v, cap, 128)
+}
+
+/** `heatmap` values: a ragged matrix, holes kept as NaN so the cell renders
+ * empty instead of collapsing the column. */
+function repairMatrix(v: unknown, rowCap: number, colCap: number): number[][] | undefined {
+  if (!Array.isArray(v)) return undefined
+  const out: number[][] = []
+  for (const row of v) {
+    if (out.length >= rowCap) break
+    if (!Array.isArray(row)) continue
+    const cells: number[] = []
+    for (const raw of row) {
+      if (cells.length >= colCap) break
+      cells.push(typeof raw === 'number' && Number.isFinite(raw) ? raw : Number.NaN)
+    }
+    out.push(cells)
+  }
+  return out
+}
+
+function repairGanttItems(v: unknown, cap: number): GenuiGanttItem[] | undefined {
+  if (!Array.isArray(v)) return undefined
+  const out: GenuiGanttItem[] = []
+  for (const item of v) {
+    if (out.length >= cap) break
+    const o = obj(item)
+    if (o === undefined) continue
+    const label = str(o.label, 256)
+    const start = num(o.start, -1e9, 1e9)
+    const end = num(o.end, -1e9, 1e9)
+    if (label === undefined || start === undefined || end === undefined) continue
+    out.push({
+      label,
+      // A bar never runs backwards: normalise rather than drop the row.
+      start: Math.min(start, end),
+      end: Math.max(start, end),
+      ...opt('group', str(o.group, 128)),
+      ...opt('color', color(o.color)),
+    })
+  }
+  return out
 }
 
 function repairTimeline(v: unknown, cap: number): Array<{ title: string; desc?: string; time?: string }> | undefined {
@@ -940,6 +1020,14 @@ function validateNode(value: unknown, depth: number, at: string, errors: string[
       break
     case 'file-tree':
       if (!Array.isArray(v.items)) errors.push(`${at}: type 'file-tree' requires items (array)`)
+      break
+    case 'heatmap':
+      if (!Array.isArray(v.rows)) errors.push(`${at}: type 'heatmap' requires rows (array)`)
+      if (!Array.isArray(v.columns)) errors.push(`${at}: type 'heatmap' requires columns (array)`)
+      if (!Array.isArray(v.values)) errors.push(`${at}: type 'heatmap' requires values (number[][])`)
+      break
+    case 'gantt':
+      if (!Array.isArray(v.items)) errors.push(`${at}: type 'gantt' requires items (array)`)
       break
     case 'breadcrumb':
       if (!Array.isArray(v.items)) errors.push(`${at}: type 'breadcrumb' requires items (array)`)

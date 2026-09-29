@@ -3,10 +3,10 @@
  * / donut renderers. All local-first; no model round trips.
  * @module @jzk-mac/dsh-genui/client/blocks/charts
  */
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import css from '../GenuiBlock.module.css'
 import { GENUI_LIMITS } from '../guard.ts'
-import type { GenuiChart, GenuiTable } from '../spec.ts'
+import type { GenuiChart, GenuiHeatmap, GenuiTable } from '../spec.ts'
 
 const CHART_COLORS = [
   'var(--dsw-static-deepseek-400)',
@@ -67,6 +67,55 @@ export function TableNode({ node }: { node: GenuiTable }) {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+/** Heatmap: one shared intensity ramp over a labelled matrix. Holes (NaN or a
+ * short row) render as empty cells instead of collapsing the column. */
+export function HeatmapNode({ node }: { node: GenuiHeatmap }) {
+  const rows = node.rows.slice(0, GENUI_LIMITS.maxHeatmapRows)
+  const columns = node.columns.slice(0, GENUI_LIMITS.maxHeatmapCols)
+  const flat = node.values.flat().filter((v) => Number.isFinite(v))
+  const lo = node.min ?? (flat.length === 0 ? 0 : Math.min(...flat))
+  const hi = node.max ?? (flat.length === 0 ? 1 : Math.max(...flat))
+  const span = hi - lo === 0 ? 1 : hi - lo
+  const unit = node.unit ?? ''
+  return (
+    <div className={css.heatmap}>
+      {node.label !== undefined && <div className={css.heatmapLabel}>{node.label}</div>}
+      <div
+        className={css.heatmapGrid}
+        style={{ gridTemplateColumns: `minmax(48px, max-content) repeat(${String(columns.length)}, minmax(16px, 1fr))` }}
+      >
+        <div className={css.heatmapCorner} />
+        {columns.map((column) => <div key={`c:${column}`} className={css.heatmapColLabel} title={column}>{column}</div>)}
+        {rows.map((row, ri) => (
+          <Fragment key={`r:${row}`}>
+            <div className={css.heatmapRowLabel} title={row}>{row}</div>
+            {columns.map((column, ci) => {
+              const v = node.values[ri]?.[ci]
+              const known = typeof v === 'number' && Number.isFinite(v)
+              const ratio = known ? (v - lo) / span : 0
+              return (
+                <div
+                  key={`${row}:${column}`}
+                  className={css.heatmapCell}
+                  data-empty={known ? undefined : 'true'}
+                  style={known ? { background: `color-mix(in srgb, var(--dsl-g-accent) ${String(Math.round(8 + ratio * 84))}%, transparent)` } : undefined}
+                  title={`${row} · ${column}: ${known ? `${String(v)}${unit}` : '—'}`}
+                  aria-label={`${row} ${column} ${known ? `${String(v)}${unit}` : '无数据'}`}
+                />
+              )
+            })}
+          </Fragment>
+        ))}
+      </div>
+      <div className={css.heatmapScale}>
+        <span>{lo}{unit}</span>
+        {node.label === undefined && <span className={css.heatmapHint}>颜色越深数值越大</span>}
+        <span>{hi}{unit}</span>
+      </div>
     </div>
   )
 }

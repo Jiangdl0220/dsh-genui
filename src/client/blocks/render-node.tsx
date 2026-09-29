@@ -11,13 +11,13 @@ import { GENUI_LIMITS } from '../guard.ts'
 import type { GenuiNode } from '../spec.ts'
 import type { AnswersState, GenuiBlockProps } from './state.ts'
 import { avatarColor, ClickFeedbackButton } from './basic.tsx'
-import { ChartNode, TableNode } from './charts.tsx'
+import { ChartNode, HeatmapNode, TableNode } from './charts.tsx'
 import {
   InputNode, RadioNode, SelectNode, SliderNode, SubmitNode, SwitchNode, TextareaNode,
 } from './forms.tsx'
 import {
-  AccordionNode, BreadcrumbNode, CalloutNode, CodeNode, CopyNode, DiffNode, FileTreeNode, JsonNode, KeyValueNode,
-  MermaidNode, PlotNode, QuizNode, Scene3DNode, StepsNode, TabsNode, TimelineNode,
+  AccordionNode, BreadcrumbNode, CalloutNode, CodeNode, CopyNode, DiffNode, FileTreeNode, GanttNode, JsonNode,
+  KeyValueNode, MermaidNode, PlotNode, QuizNode, Scene3DNode, StepsNode, TabsNode, TimelineNode,
 } from './advanced.tsx'
 
 /** Custom node data shape (declared locally: pristine hosts export no type). */
@@ -194,6 +194,8 @@ export function renderNode(
     }
     case 'table': return <TableNode key={key} node={node} />
     case 'chart': return <ChartNode key={key} chart={node} />
+    case 'heatmap': return <HeatmapNode key={key} node={node} />
+    case 'gantt': return <GanttNode key={key} node={node} />
     case 'tabs': return <TabsNode key={key} tabs={node} onAction={onAction} depth={depth + 1} answers={answers} />
     case 'avatar': {
       return (

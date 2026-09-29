@@ -98,7 +98,8 @@
     "verify:fence": "tsx scripts/verify-dom-fence.mjs",
     "check": "rm -rf lib && tsc -p tsconfig.json && vitest run && tsdown",
     "prepack": "node scripts/prepack.mjs",
-    "verify:export": "tsx scripts/verify-export.mjs"
+    "verify:export": "tsx scripts/verify-export.mjs",
+    "verify:guard": "tsx scripts/verify-guard.mjs"
   },
   "dsh": {
     "bundle": {

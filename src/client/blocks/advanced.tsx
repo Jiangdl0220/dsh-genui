@@ -13,7 +13,7 @@ import { renderNode } from './render-node.tsx'
 import type { AnswersState, GenuiBlockProps } from './state.ts'
 import type {
   GenuiAccordion, GenuiBreadcrumb, GenuiCallout, GenuiCode, GenuiCopy, GenuiDiff, GenuiFileTree, GenuiFileTreeNode,
-  GenuiJson, GenuiKeyValue, GenuiMermaid, GenuiPlot, GenuiQuiz, GenuiScene3D, GenuiSteps, GenuiTabs, GenuiTimeline,
+  GenuiGantt, GenuiJson, GenuiKeyValue, GenuiMermaid, GenuiPlot, GenuiQuiz, GenuiScene3D, GenuiSteps, GenuiTabs, GenuiTimeline,
 } from '../spec.ts'
 
 const CALLOUT_TONES: Record<string, string> = {
@@ -294,6 +294,54 @@ export function TimelineNode({ node }: { node: GenuiTimeline }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+/** Gantt: one bar per item over a shared axis. `start`/`end` are plain numbers
+ * in the caller's unit (day index, hour, sprint) — the axis only labels the
+ * ends, so no date parsing or timezone rules are involved. */
+export function GanttNode({ node }: { node: GenuiGantt }) {
+  const items = node.items.slice(0, GENUI_LIMITS.maxGanttItems)
+  const lo = node.min ?? Math.min(...items.map((item) => item.start), 0)
+  const hi = node.max ?? Math.max(...items.map((item) => item.end), lo + 1)
+  const span = hi - lo === 0 ? 1 : hi - lo
+  const unit = node.unit ?? ''
+  return (
+    <div className={css.gantt}>
+      {node.title !== undefined && <div className={css.ganttTitle}>{node.title}</div>}
+      <div className={css.ganttRows}>
+        {items.map((item, i) => {
+          const left = ((item.start - lo) / span) * 100
+          const width = Math.max(1.5, ((item.end - item.start) / span) * 100)
+          return (
+            <div key={`${item.label}:${String(i)}`} className={css.ganttRow}>
+              <div className={css.ganttLabel} title={item.label}>
+                {item.label}
+                {item.group !== undefined && <span className={css.ganttGroup}>{item.group}</span>}
+              </div>
+              <div className={css.ganttTrack}>
+                <div
+                  className={css.ganttBar}
+                  style={{
+                    left: `${String(left)}%`,
+                    width: `${String(width)}%`,
+                    ...(item.color === undefined ? {} : { background: item.color }),
+                  }}
+                  title={`${item.label}: ${String(item.start)} – ${String(item.end)}${unit}`}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div className={css.ganttAxis}>
+        <span />
+        <div className={css.ganttAxisTicks}>
+          <span>{lo}{unit}</span>
+          <span>{hi}{unit}</span>
+        </div>
+      </div>
     </div>
   )
 }

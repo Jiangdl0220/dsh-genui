@@ -108,6 +108,25 @@ function block(node: GenuiNode): string {
       const table: Extract<GenuiNode, { type: 'table' }> = { type: 'table', columns, rows }
       return `${node.kind ?? 'bars'} 图：\n\n${block(table)}`
     }
+    case 'heatmap': {
+      const table: Extract<GenuiNode, { type: 'table' }> = {
+        type: 'table',
+        columns: ['', ...node.columns],
+        rows: node.rows.map((row, ri) => [
+          row,
+          ...node.columns.map((_, ci) => {
+            const v = node.values[ri]?.[ci]
+            return typeof v === 'number' && Number.isFinite(v) ? `${String(v)}${node.unit ?? ''}` : '—'
+          }),
+        ]),
+      }
+      return [node.label === undefined ? '' : `**${node.label}**`, block(table)].filter((s) => s !== '').join('\n\n')
+    }
+    case 'gantt':
+      return [
+        node.title === undefined ? '' : `**${node.title}**`,
+        ...node.items.map((item) => `- ${item.label}：${String(item.start)} – ${String(item.end)}${node.unit ?? ''}${item.group === undefined ? '' : `（${item.group}）`}`),
+      ].filter((s) => s !== '').join('\n')
     case 'plot':
       return [
         node.title === undefined ? '' : `**${node.title}**`,
