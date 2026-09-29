@@ -10,6 +10,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGenuiAction } from './action-context.ts'
 import css from './GenuiBlock.module.css'
 import { loadBlockState, saveBlockState } from './interaction-store.ts'
+import { cardToPng, copyText, downloadBlob, specToMarkdown } from './export.ts'
 import { renderNode } from './blocks/render-node.tsx'
 import type { AnswersState, GenuiBlockProps, QuestionMeta } from './blocks/state.ts'
 import type { GenuiSpec } from './spec.ts'
@@ -143,8 +144,51 @@ export const GenuiBlock = memo(function GenuiBlock({ spec, stateKey, showTitle =
     }, 300)
     return () => clearTimeout(timer)
   }, [stateKey, answers, locked, fields, secretFields])
+
+  /* ---------- export (Markdown / JSON / PNG) ---------- */
+  const blockRef = useRef<HTMLDivElement | null>(null)
+  const [flash, setFlash] = useState<string | null>(null)
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const say = useCallback((message: string) => {
+    setFlash(message)
+    if (flashTimer.current !== null) clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => { setFlash(null) }, 1600)
+  }, [])
+  useEffect(() => () => {
+    if (flashTimer.current !== null) clearTimeout(flashTimer.current)
+  }, [])
+  const copyWith = useCallback((text: string, done: string) => {
+    void copyText(text).then((ok) => { say(ok ? done : '复制失败') })
+  }, [say])
+  const exportPng = useCallback(() => {
+    const node = blockRef.current
+    if (node === null) return
+    void cardToPng(node).then((blob) => {
+      if (blob === null) { say('导出失败'); return }
+      const slug = (spec.title ?? 'genui')
+        .replace(/[^\w\u4e00-\u9fa5-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40)
+      downloadBlob(blob, `${slug === '' ? 'genui' : slug}.png`)
+      say('已导出图片')
+    })
+  }, [spec.title, say])
+
   return (
-    <div className={css.block} data-genui>
+    <div className={css.block} data-genui ref={blockRef}>
+      {/* Export bar: hover-revealed, excluded from the PNG snapshot and from
+          Markdown (it is chrome, not content). */}
+      <div className={css.exportBar} data-genui-export-ui>
+        {flash === null ? (
+          <>
+            <button type="button" className={css.exportButton} onClick={() => { copyWith(specToMarkdown(spec), '已复制 Markdown') }}>复制 MD</button>
+            <button type="button" className={css.exportButton} onClick={() => { copyWith(JSON.stringify(spec, null, 2), '已复制 JSON') }}>复制 JSON</button>
+            <button type="button" className={css.exportButton} onClick={exportPng}>图片</button>
+          </>
+        ) : (
+          <span className={css.exportFlash} role="status">{flash}</span>
+        )}
+      </div>
       {showTitle && spec.title !== undefined && <div className={css.banner}>{spec.title}</div>}
       <div className={css.col} style={{ gap: `${gap}px` }}>
         {spec.items.map((c, i) => (
