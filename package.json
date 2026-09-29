@@ -95,6 +95,7 @@
   "scripts": {
     "build": "rm -rf lib && tsc -p tsconfig.json && tsdown",
     "test": "vitest run",
+    "verify:fence": "tsx scripts/verify-dom-fence.mjs",
     "check": "rm -rf lib && tsc -p tsconfig.json && vitest run && tsdown",
     "prepack": "node scripts/prepack.mjs"
   },

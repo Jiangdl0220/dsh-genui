@@ -60,6 +60,9 @@ import { renderResolvedFenceNode, type GenuiFenceContext } from './fence-render.
 const CODE_BLOCK_SELECTORS = '.md-code-block, .code-block, .code-block-small'
 /** Marker attribute set on blocks this channel has taken over. */
 const PROCESSED = 'data-genui-rendered'
+/** Every host code surface carries a banner; its presence is what scopes the
+ * content-identification fallback to real code blocks. */
+const BANNER = '[data-code-block-banner]'
 /** The settled marker on AssistantMarkdown (absent = settled). */
 const STREAMING = '[data-streaming]'
 /** Container class for the plugin-owned root. */
@@ -140,13 +143,6 @@ function fenceLangFromProps(block: Element): string | null {
     fiber = fiber.return ?? null
   }
   return null
-}
-
-/** Whether the block is a `dsh-ui` fence: by its DOM banner label, or — on
- * hosts whose banner masks an unknown language behind a generic label (DSH
- * 0.2.0 toolbar) — by the surface's original info-string prop. */
-function isDshUiFence(block: Element): boolean {
-  return infostringOf(block) !== null || fenceLangFromProps(block) === 'dsh-ui'
 }
 
 /** The banner label's raw text (empty while streaming — the host renders the
@@ -378,21 +374,25 @@ export function installDomFenceRenderer(
     if (block.hasAttribute(PROCESSED)) return
     const row = rowOf(block)
     const settled = isSettled(block)
-    // Settled blocks must identify themselves as a dsh-ui fence. Streaming
-    // blocks cannot: the host renders the language label only once the reply
-    // settles (MarkdownText passes `lang={streaming ? undefined : lang}`), so
-    // during streaming the fence is identified by CONTENT — a partial parse
-    // that yields a GenUI node. A misidentified fence (e.g. a ```json block
-    // that happens to parse) is reverted at the settle transition below.
-    // Identification is the banner label OR the surface's original info-string
-    // prop: hosts whose banner masks an unknown language (DSH 0.2.0 toolbar)
-    // keep the fence exact through the prop while never showing `dsh-ui`.
-    if (settled && !isDshUiFence(block)) return
     const raw = rawOf(block)
     if (raw.trim() === '') {
       if (settled) warnOnce(block, 'settled dsh-ui fence has an empty body; keeping the code block')
       return
     }
+    // Identification, most authoritative first: the banner label, the
+    // surface's original info-string prop (hosts whose banner masks an unknown
+    // language, e.g. the DSH 0.2.0 toolbar), and — only for a settled block
+    // whose banner masks the language AND whose props are unreadable (a future
+    // React build) — the body itself. Content is the last resort so host drift
+    // degrades to a rendered fence instead of a silently skipped one; a block
+    // whose info string IS readable is never taken over by content, so a
+    // ```json block that happens to parse stays a code block. Streaming blocks
+    // have no label at all and are always identified by content.
+    const labelled = infostringOf(block) !== null
+    const propLang = labelled ? null : fenceLangFromProps(block)
+    const identified = labelled || propLang === 'dsh-ui'
+    const maskedBanner = propLang === null && block.querySelector(BANNER) !== null
+    if (settled && !identified && !maskedBanner) return
     const { key, context } = contextOf(row, block, settled)
     const node: ReactNode | null = renderResolvedFenceNode(raw, key, context)
     // Null = no finished component yet (streaming half) or unrepairable:
@@ -402,6 +402,9 @@ export function installDomFenceRenderer(
     if (node === null) {
       if (settled) warnOnce(block, 'settled dsh-ui fence body does not parse; keeping the code block')
       return
+    }
+    if (settled && !identified) {
+      warnOnce(block, '宿主横幅隐藏了围栏语言且读不到 props，已按正文解析识别该围栏（宿主 DOM 漂移，仍可渲染）')
     }
     const container = document.createElement('div')
     container.className = CONTAINER_CLASS

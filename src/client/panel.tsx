@@ -30,7 +30,7 @@ import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { GenuiBlock } from './GenuiBlock.tsx'
 import { ErrorBoundary } from './ErrorBoundary.tsx'
 import { panelStateKey } from './interaction-store.ts'
-import { clearSessionPanel, getPanelExpandToken, getPanelSpec, subscribePanel, subscribePanelExpand } from './panel-store.ts'
+import { clearSessionPanel, getPanelExpandToken, getPanelSpec, setLocalPanel, subscribePanel, subscribePanelExpand } from './panel-store.ts'
 import css from './GenuiBlock.module.css'
 
 /** Resize bounds for the panel body, in px. */
@@ -151,6 +151,18 @@ export function GenuiPanel({ sessionId, sendGenuiAction }: GenuiPanelProps) {
           <span className={css.panelBadge}>面板</span>
           <span className={css.panelTitle}>{spec.title ?? 'GenUI 面板'}</span>
           <span className={css.panelChevron} aria-hidden>{collapsed ? '▸' : '▾'}</span>
+        </button>
+        {/* Same effect as `/panel clear`, reachable without knowing the
+            command: the dock occupies the composer's space until it is
+            emptied, and the only prior way out was the slash command. */}
+        <button
+          type="button"
+          className={css.panelClose}
+          aria-label="关闭面板"
+          title="关闭面板（等同 /panel clear）"
+          onClick={() => setLocalPanel(sessionId, null)}
+        >
+          ✕
         </button>
       </div>
       {!collapsed && (
