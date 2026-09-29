@@ -1,7 +1,7 @@
 /**
  * Form family: radio aggregation + submit grading, switch, slider, IME-safe
  * input/select/textarea. All state flows through the shared AnswersState.
- * @module @omdsh-dev/dsh-genui/client/blocks/forms
+ * @module @jzk-mac/dsh-genui/client/blocks/forms
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import css from '../GenuiBlock.module.css'

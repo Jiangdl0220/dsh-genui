@@ -14,7 +14,7 @@
  *   skips mismatched closers (a `]` mistyped as `}`, duplicated terminators).
  *   SETTLED MESSAGES ONLY: a streaming half must never be adopted as a
  *   finished prefix.
- * @module @omdsh-dev/dsh-genui/shared/fence-repair
+ * @module @jzk-mac/dsh-genui/shared/fence-repair
  */
 /** A fence body counts as complete when it parses as a whole JSON value. */
 export declare function isCompleteJson(raw: string): boolean;

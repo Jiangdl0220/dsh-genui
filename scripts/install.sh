@@ -93,7 +93,7 @@ sync_skill() {
   SKILL_FILE=$(cd "$DSH_HOME" && DSH_HOME="$DSH_HOME" PROFILE="$PROFILE" node -e "
 const path = require('path')
 try {
-  const pkg = require.resolve('@omdsh-dev/dsh-genui/package.json', { paths: [process.env.DSH_HOME + '/profiles/' + process.env.PROFILE] })
+  const pkg = require.resolve('@jzk-mac/dsh-genui/package.json', { paths: [process.env.DSH_HOME + '/profiles/' + process.env.PROFILE] })
   console.log(path.join(path.dirname(pkg), 'SKILL.md'))
 } catch { process.exit(1) }
 " 2>/dev/null || true)
@@ -130,7 +130,7 @@ PROFILE_PKG="$DSH_HOME/profiles/$PROFILE/package.json"
 if [ -f "$PROFILE_PKG" ] && grep -q "dsh-genui" "$PROFILE_PKG" 2>/dev/null; then
   warn "插件已在 profile '$PROFILE' 中。"
   sync_skill
-  printf "  想重装就手动执行: dsh plugin --profile %s remove @omdsh-dev/dsh-genui，再跑本脚本。\n" "$PROFILE"
+  printf "  想重装就手动执行: dsh plugin --profile %s remove @jzk-mac/dsh-genui，再跑本脚本。\n" "$PROFILE"
   printf "  否则直接: 重启 dsh web + 硬刷新 即可验证。\n"
   exit 0
 fi

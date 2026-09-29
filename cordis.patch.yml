@@ -6,4 +6,4 @@
 # the browser renderer via the fence-registry extension point.
 - insert:
     - id: genui
-      name: '@omdsh-dev/dsh-genui'
+      name: '@jzk-mac/dsh-genui'

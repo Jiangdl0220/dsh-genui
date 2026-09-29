@@ -3,7 +3,7 @@
  * `window.__GenuiAssets__.three`. Built as a standalone IIFE into
  * `lib/assets/three.js` and served by the plugin's node-half route; loaded on
  * demand by scene3d-lazy.
- * @module @omdsh-dev/dsh-genui/client/asset-three
+ * @module @jzk-mac/dsh-genui/client/asset-three
  */
 import { mountScene } from './scene3d-core.ts'
 

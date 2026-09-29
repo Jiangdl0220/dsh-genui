@@ -1,6 +1,6 @@
 /**
- * Package-owned invariant companion for `@omdsh-dev/dsh-genui`.
- * @module @omdsh-dev/dsh-genui/invariant
+ * Package-owned invariant companion for `@jzk-mac/dsh-genui`.
+ * @module @jzk-mac/dsh-genui/invariant
  */
 import type { Context } from '@deepseek-ai/cordis';
 /** Cordis companion plugin name. */

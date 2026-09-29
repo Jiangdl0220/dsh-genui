@@ -18,7 +18,7 @@
  * streams, every FINISHED component appears the moment its JSON object
  * closes, so the UI assembles top-down before the fence (or reply) completes.
  * A body with no finished component yet falls back to a plain code block.
- * @module @omdsh-dev/dsh-genui/client
+ * @module @jzk-mac/dsh-genui/client
  */
 import type { Context } from '@deepseek-ai/cordis';
 import { renderGenuiFence } from './fence-render.tsx';

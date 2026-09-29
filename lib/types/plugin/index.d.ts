@@ -7,7 +7,7 @@
  *
  * The section is a convention section (order 100-199), placed after the bash
  * guidance so the model sees it among its output-format rules.
- * @module @omdsh-dev/dsh-genui
+ * @module @jzk-mac/dsh-genui
  */
 import { Context } from '@deepseek-ai/cordis';
 /** Convention: tool guidance uses 100–199; bash's section is 104. */

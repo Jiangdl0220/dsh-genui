@@ -111,6 +111,44 @@ function infostringOf(block: Element): string | null {
   return null
 }
 
+/** Minimal shape of the React fiber fields this channel reads. */
+interface FiberLike {
+  memoizedProps?: { lang?: unknown } | null
+  return?: FiberLike | null
+}
+
+/**
+ * Original fence info-string read from the React props that rendered the
+ * surface.
+ *
+ * DSH 0.2.0 renders chat fences through the toolbar banner, which substitutes
+ * the generic `labels.codeLabel` for a language hint the highlighter does not
+ * know — so the literal `dsh-ui` label the channel identifies by never reaches
+ * the DOM. The fiber still carries the original `lang` prop, which keeps the
+ * identification exact (a props match, not a content guess).
+ * @returns the info string, or null when no fiber exposes a string `lang`.
+ */
+function fenceLangFromProps(block: Element): string | null {
+  const key = Object.keys(block).find(
+    (name) => name.startsWith('__reactFiber$') || name.startsWith('__reactInternalInstance$'),
+  )
+  if (key === undefined) return null
+  let fiber = (block as unknown as Record<string, FiberLike | undefined>)[key] ?? null
+  for (let hops = 0; fiber != null && hops < 16; hops += 1) {
+    const lang = fiber.memoizedProps?.lang
+    if (typeof lang === 'string') return lang
+    fiber = fiber.return ?? null
+  }
+  return null
+}
+
+/** Whether the block is a `dsh-ui` fence: by its DOM banner label, or — on
+ * hosts whose banner masks an unknown language behind a generic label (DSH
+ * 0.2.0 toolbar) — by the surface's original info-string prop. */
+function isDshUiFence(block: Element): boolean {
+  return infostringOf(block) !== null || fenceLangFromProps(block) === 'dsh-ui'
+}
+
 /** The banner label's raw text (empty while streaming — the host renders the
  * language label only once the reply settles). Returns the first leaf
  * outside the code body (banners always lead with the language), so a
@@ -340,13 +378,16 @@ export function installDomFenceRenderer(
     if (block.hasAttribute(PROCESSED)) return
     const row = rowOf(block)
     const settled = isSettled(block)
-    // Settled blocks must carry the dsh-ui label. Streaming blocks cannot:
-    // the host renders the language label only once the reply settles
-    // (MarkdownText passes `lang={streaming ? undefined : lang}`), so during
-    // streaming the fence is identified by CONTENT — a partial parse that
-    // yields a GenUI node. A misidentified fence (e.g. a ```json block that
-    // happens to parse) is reverted at the settle transition below.
-    if (settled && infostringOf(block) === null) return
+    // Settled blocks must identify themselves as a dsh-ui fence. Streaming
+    // blocks cannot: the host renders the language label only once the reply
+    // settles (MarkdownText passes `lang={streaming ? undefined : lang}`), so
+    // during streaming the fence is identified by CONTENT — a partial parse
+    // that yields a GenUI node. A misidentified fence (e.g. a ```json block
+    // that happens to parse) is reverted at the settle transition below.
+    // Identification is the banner label OR the surface's original info-string
+    // prop: hosts whose banner masks an unknown language (DSH 0.2.0 toolbar)
+    // keep the fence exact through the prop while never showing `dsh-ui`.
+    if (settled && !isDshUiFence(block)) return
     const raw = rawOf(block)
     if (raw.trim() === '') {
       if (settled) warnOnce(block, 'settled dsh-ui fence has an empty body; keeping the code block')
@@ -411,7 +452,7 @@ export function installDomFenceRenderer(
       // stock block and drop the mount.
       if (settled && !mount.lastSettled) {
         const labelText = labelTextOf(block)
-        if (labelText !== '' && labelText !== 'dsh-ui') {
+        if (labelText !== '' && labelText !== 'dsh-ui' && fenceLangFromProps(block) !== 'dsh-ui') {
           // A content-identified fence settled as another language (e.g. a
           // ```json block that happened to parse): restore the stock block.
           unmountBlock(block)

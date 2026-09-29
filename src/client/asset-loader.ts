@@ -5,7 +5,7 @@
  * `window.__GenuiAssets__`.
  *
  * The bundles are served by the plugin's OWN node-half HTTP route
- * (`/plugins/@omdsh-dev/dsh-genui/assets/*`), registered through the host
+ * (`/plugins/@jzk-mac/dsh-genui/assets/*`), registered through the host
  * webserver service — no host source change needed, and the longest-prefix
  * rule lets this route win over the generic `/plugins` bundle route. Each
  * file is loaded at most once per page (promise memoized); a rejection is
@@ -15,11 +15,11 @@
  * `window.__DSH_BOOT__` carries the client bundle rev, so a plugin rebuild
  * busts the asset cache together with the main bundle. Absent graph = no
  * query; the route serves no-cache anyway.
- * @module @omdsh-dev/dsh-genui/client/asset-loader
+ * @module @jzk-mac/dsh-genui/client/asset-loader
  */
 
 /** The plugin's entry id — mirrors the loader entry name (package name). */
-const PLUGIN_ID = '@omdsh-dev/dsh-genui'
+const PLUGIN_ID = '@jzk-mac/dsh-genui'
 
 /** Assets directory served by the node-half route. */
 const ASSET_DIR = `/plugins/${PLUGIN_ID}/assets`

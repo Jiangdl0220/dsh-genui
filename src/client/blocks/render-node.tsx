@@ -2,7 +2,7 @@
  * The recursive render dispatcher: maps the white-listed GenuiNode union to
  * concrete components. Leaf cases render inline; compound families live in
  * the sibling block modules. Depth-guarded against pathological specs.
- * @module @omdsh-dev/dsh-genui/client/blocks/render-node
+ * @module @jzk-mac/dsh-genui/client/blocks/render-node
  */
 import { type ReactNode, type ComponentType } from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'

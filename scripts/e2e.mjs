@@ -171,7 +171,7 @@ try {
   await page.waitForTimeout(5000)
 
   // client.js 必须 200（插件 bundle 可加载）；404 直接失败
-  const clientRes = await fetch(`${BASE}/plugins/@omdsh-dev/dsh-genui/client.js`)
+  const clientRes = await fetch(`${BASE}/plugins/@jzk-mac/dsh-genui/client.js`)
   if (!clientRes.ok) {
     await page.screenshot({ path: join(artifactsDir, 'e2e-fail-client404.png') })
     await logTail()

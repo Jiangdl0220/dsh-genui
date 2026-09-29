@@ -7,7 +7,7 @@
  *
  * The section is a convention section (order 100-199), placed after the bash
  * guidance so the model sees it among its output-format rules.
- * @module @omdsh-dev/dsh-genui
+ * @module @jzk-mac/dsh-genui
  */
 
 import { Context } from '@deepseek-ai/cordis'
@@ -36,7 +36,7 @@ export const GENUI_SECTION_ORDER = 105
  */
 
 /** Route prefix under /plugins; anything under it is this plugin's asset. */
-const ASSET_ROUTE_PATH = '/plugins/@omdsh-dev/dsh-genui/assets'
+const ASSET_ROUTE_PATH = '/plugins/@jzk-mac/dsh-genui/assets'
 
 /** Safe flat file names only: no slashes, no traversal, js assets only. */
 const ASSET_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.js$/

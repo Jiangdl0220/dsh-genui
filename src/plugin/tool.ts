@@ -15,7 +15,7 @@
  * validation, deterministic repair, and resource limits live in the shared
  * guard (`src/client/guard.ts`), which the schema deliberately stays loose
  * enough to reach.
- * @module @omdsh-dev/dsh-genui/plugin/tool
+ * @module @jzk-mac/dsh-genui/plugin/tool
  */
 
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'

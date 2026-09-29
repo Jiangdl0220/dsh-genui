@@ -1,7 +1,7 @@
 /**
  * Chart family: categorical palette, the sortable table, and the bars / line
  * / donut renderers. All local-first; no model round trips.
- * @module @omdsh-dev/dsh-genui/client/blocks/charts
+ * @module @jzk-mac/dsh-genui/client/blocks/charts
  */
 import { useState } from 'react'
 import css from '../GenuiBlock.module.css'

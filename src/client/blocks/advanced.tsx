@@ -2,7 +2,7 @@
  * Advanced family: callout/steps/keyvalue, plot/diff/json/code, tabs and
  * accordion containers (recursing through renderNode), copy, mermaid,
  * scene3d, timeline, file-tree, quiz, breadcrumb.
- * @module @omdsh-dev/dsh-genui/client/blocks/advanced
+ * @module @jzk-mac/dsh-genui/client/blocks/advanced
  */
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { CodeBlock, DiffBlock, JsonTree } from '@deepseek-ai/dsh-client-ui-primitives'

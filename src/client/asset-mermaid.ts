@@ -3,7 +3,7 @@
  * `window.__GenuiAssets__.mermaid`. Built as a standalone IIFE into
  * `lib/assets/mermaid.js` and served by the plugin's node-half route; loaded
  * on demand by mermaid-lazy.
- * @module @omdsh-dev/dsh-genui/client/asset-mermaid
+ * @module @jzk-mac/dsh-genui/client/asset-mermaid
  */
 import { renderMermaid } from './mermaid-core.ts'
 import { assertSafeSvg, repairMermaidSource } from './mermaid-safe.ts'
