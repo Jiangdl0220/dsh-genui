@@ -165,6 +165,12 @@ check('宿主拒绝读取时把原因带到提示里',
     return !out.ok && out.message === 'ENOENT: no such file'
   })())
 
+check('被截断的 JSON 明确报错而不是抛语法错误',
+  await (async () => {
+    const out = await loadTableSource(readerOf('{"columns":[', { complete: false }), 'S1', { path: 'd.json' }, never)
+    return !out.ok && out.message.includes('截断')
+  })())
+
 check('宿主没有工作区服务时优雅降级',
   await (async () => {
     const out = await loadTableSource(createWorkspaceReader(undefined), 'S1', { path: 'x.csv' }, never)

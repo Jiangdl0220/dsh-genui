@@ -306,6 +306,11 @@ async function read(
   }
   const result = await reader(sessionId, source.path, signal)
   if (!result.ok) return { ok: false, message: result.message }
+  // JSON is parsed as a whole document, so a partial page can never be used
+  // — say so instead of surfacing a syntax error from the cut.
+  if (format === 'json' && !result.read.complete) {
+    return { ok: false, message: `JSON 文件超过 ${MAX_SOURCE_LINES} 行（被截断），请改用 CSV 或缩小文件` }
+  }
   return { ok: true, value: { text: result.read.text, complete: result.read.complete } }
 }
 
