@@ -18,6 +18,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSPropert
 import { CodeBlock } from '@deepseek-ai/dsh-client-ui-primitives'
 import { ErrorBoundary } from './ErrorBoundary.tsx'
 import { GenuiBlock } from './GenuiBlock.tsx'
+import { GenuiSessionProvider } from './data-source.tsx'
 import { repairGenuiSpec } from './guard.ts'
 import { fenceStateKey } from './interaction-store.ts'
 import { parsePartialGenuiSpec } from './parse-partial.ts'
@@ -155,17 +156,22 @@ function renderInlineFence(key: Key, context: GenuiFenceContext | undefined, spe
     // tells the user something was wrong — only an unrecoverable body keeps
     // the red diagnostic.
     <ErrorBoundary key={context?.source?.id ?? key} label="该界面">
-      <GenuiBlock
-        spec={spec}
-        // v2.7 durable state: session + stable source + content fingerprint —
-        // replaying the same content restores answers/lock/field values; new
-        // content (换题, edited spec) gets a fresh key. Without a stable
-        // source (streaming / non-conversation surfaces) state is not
-        // persisted.
-        stateKey={sessionId === undefined
-          ? undefined
-          : fenceStateKey(sessionId, context?.source?.id ?? String(key), JSON.stringify(spec))}
-      />
+      {/* The session id reaches the data nodes (`source` loads) through this
+          provider; without a session a sourced node reports the condition
+          instead of reading an unscoped file. */}
+      <GenuiSessionProvider sessionId={sessionId}>
+        <GenuiBlock
+          spec={spec}
+          // v2.7 durable state: session + stable source + content fingerprint —
+          // replaying the same content restores answers/lock/field values; new
+          // content (换题, edited spec) gets a fresh key. Without a stable
+          // source (streaming / non-conversation surfaces) state is not
+          // persisted.
+          stateKey={sessionId === undefined
+            ? undefined
+            : fenceStateKey(sessionId, context?.source?.id ?? String(key), JSON.stringify(spec))}
+        />
+      </GenuiSessionProvider>
     </ErrorBoundary>
   )
 }

@@ -14,6 +14,7 @@ import { useEffect, useMemo } from 'react'
 import type {} from '@deepseek-ai/dsh-client-runtime/client'
 import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/src/client/contract/slots'
 import { GenuiBlock } from './GenuiBlock.tsx'
+import { GenuiSessionProvider } from './data-source.tsx'
 import { ErrorBoundary } from './ErrorBoundary.tsx'
 import { repairGenuiSpec } from './guard.ts'
 import { toolStateKey } from './interaction-store.ts'
@@ -59,7 +60,9 @@ export function GenuiToolView({ toolName, block, sessionId }: ToolCallViewProps)
     <div className={css.tool} data-genui-tool>
       <ErrorBoundary label="工具卡片">
         {/* callId is stable across replay → tool-card interaction state is durable */}
-        <GenuiBlock spec={spec} stateKey={toolStateKey(sessionId, block.callId)} />
+        <GenuiSessionProvider sessionId={sessionId}>
+          <GenuiBlock spec={spec} stateKey={toolStateKey(sessionId, block.callId)} />
+        </GenuiSessionProvider>
       </ErrorBoundary>
     </div>
   )

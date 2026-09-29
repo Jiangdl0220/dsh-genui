@@ -18,7 +18,7 @@
  * - The whole spec carries a node budget; once exhausted, remaining siblings
  *   are elided.
  */
-import type { GenuiFileTreeNode, GenuiGanttItem, GenuiList, GenuiNode, GenuiPlot, GenuiPlotSeries, GenuiScene3D, GenuiSpec } from './spec.ts'
+import type { GenuiFileTreeNode, GenuiGanttItem, GenuiList, GenuiNode, GenuiPlot, GenuiPlotSeries, GenuiScene3D, GenuiSource, GenuiSpec } from './spec.ts'
 
 /** Hard resource limits enforced by repair (and mirrored at render time). */
 export const GENUI_LIMITS = {
@@ -66,6 +66,8 @@ export const GENUI_LIMITS = {
   maxHeatmapCols: 20,
   /** Maximum `gantt` bars. */
   maxGanttItems: 30,
+  /** Maximum length of a data node's `source.path`. */
+  maxSourcePath: 512,
 } as const
 
 /** Result of `validateGenuiSpec`. */
@@ -151,6 +153,7 @@ const BADGE_TONES = ['success', 'warn', 'danger', 'accent'] as const
 const INPUT_TYPES = ['text', 'email', 'password'] as const
 const CALLOUT_TONES = ['info', 'success', 'warning', 'error'] as const
 const CHART_KINDS = ['bars', 'line', 'donut'] as const
+const SOURCE_FORMATS = ['csv', 'tsv', 'json'] as const
 const PLOT_KINDS = ['line', 'area', 'scatter'] as const
 const MESH_SHAPES = ['box', 'sphere', 'cone', 'cylinder', 'torus'] as const
 const FILE_TYPES = ['file', 'dir'] as const
@@ -272,12 +275,21 @@ function repairNode(value: unknown, ctx: RepairCtx, depth: number): GenuiNode | 
       return { type: 'list', items }
     }
     case 'table': {
+      // A `source` table carries no data in the reply: the reference wins and
+      // the renderer swaps in the loaded rows. An unusable source falls back
+      // to the inline form rather than dropping the node.
+      const source = repairSource(v.source)
+      if (source !== undefined) return { type: 'table', columns: [], rows: [], source }
       const columns = repairStrings(v.columns, GENUI_LIMITS.maxTableCols, 128)
       const rows = repairRows(v.rows, GENUI_LIMITS.maxTableRows, GENUI_LIMITS.maxTableCols)
       if (columns === undefined || rows === undefined) return null
       return { type: 'table', columns, rows }
     }
     case 'chart': {
+      const source = repairSource(v.source)
+      if (source !== undefined) {
+        return { type: 'chart', data: [], ...opt('kind', enu(v.kind, CHART_KINDS)), source }
+      }
       const data = repairChartData(v.data, GENUI_LIMITS.maxChartPoints)
       const series = Array.isArray(v.series) ? repairSeries(v.series, GENUI_LIMITS.maxPlotSeries, GENUI_LIMITS.maxChartPoints) : undefined
       // `data` is required by the type but grouped bars may ship `series`
@@ -493,6 +505,25 @@ function repairStrings(v: unknown, cap: number, strCap: number): string[] | unde
     if (typeof item === 'string') out.push(item.slice(0, strCap))
   }
   return out
+}
+
+/**
+ * Workspace `source` of a data node. The path is a REFERENCE the Host resolves
+ * against the session workspace and scope-checks itself; this repair only
+ * bounds its length and the format enum, and drops the field entirely when it
+ * is not usable (`format` from the suffix otherwise).
+ */
+function repairSource(v: unknown): GenuiSource | undefined {
+  const o = obj(v)
+  if (o === undefined) return undefined
+  const path = str(o.path, GENUI_LIMITS.maxSourcePath)
+  if (path === undefined || path.trim() === '') return undefined
+  return {
+    path: path.trim(),
+    ...opt('format', enu(o.format, SOURCE_FORMATS)),
+    ...opt('label', str(o.label, 64)),
+    ...opt('value', str(o.value, 64)),
+  }
 }
 
 function repairListItems(v: unknown, cap: number): GenuiList['items'] | undefined {
@@ -956,10 +987,14 @@ function validateNode(value: unknown, depth: number, at: string, errors: string[
       if (!Array.isArray(v.items)) errors.push(`${at}: type 'list' requires items (array)`)
       break
     case 'table':
+      if (repairSource(v.source) !== undefined) break
+      if (v.source !== undefined) errors.push(`${at}.source must be {path: string, format?: 'csv'|'tsv'|'json'}`)
       if (!Array.isArray(v.columns)) errors.push(`${at}: type 'table' requires columns (array)`)
       if (!Array.isArray(v.rows)) errors.push(`${at}: type 'table' requires rows (array)`)
       break
     case 'chart':
+      if (repairSource(v.source) !== undefined) break
+      if (v.source !== undefined) errors.push(`${at}.source must be {path: string, format?: 'csv'|'tsv'|'json'}`)
       if (!Array.isArray(v.data) && !Array.isArray(v.series)) errors.push(`${at}: type 'chart' requires data or series (array)`)
       break
     case 'tabs': {

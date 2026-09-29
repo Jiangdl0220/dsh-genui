@@ -216,10 +216,29 @@ export interface GenuiList {
   items: Array<string | { title: string; desc?: string }>
 }
 
+/**
+ * Workspace file a data node loads its values from at render time. The reply
+ * carries the REFERENCE, never the rows: a 200-row table costs one small node
+ * instead of 20 kB of fence. Relative paths resolve against the session's
+ * workspace; the Host enforces that scope.
+ */
+export interface GenuiSource {
+  /** Workspace-relative (or absolute) path of a CSV / TSV / JSON file. */
+  path: string
+  /** Explicit format; default is inferred from the path suffix. */
+  format?: 'csv' | 'tsv' | 'json'
+  /** CSV/TSV charts only: header name of the label column (default: 1st). */
+  label?: string
+  /** CSV/TSV charts only: header name of the numeric column (default: 2nd). */
+  value?: string
+}
+
 export interface GenuiTable {
   type: 'table'
   columns: string[]
   rows: Array<Array<string | number>>
+  /** Load `columns`/`rows` from a workspace file instead of the node. */
+  source?: GenuiSource
 }
 
 export interface GenuiChartDatum {
@@ -235,6 +254,8 @@ export interface GenuiChart {
   data: GenuiChartDatum[]
   /** Multi-series grouped bars: one series of data per entry. */
   series?: Array<{ label: string; color?: string; data: GenuiChartDatum[] }>
+  /** Load `data` from a workspace file instead of the node. */
+  source?: GenuiSource
 }
 
 export interface GenuiTab {

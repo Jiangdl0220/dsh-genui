@@ -28,6 +28,7 @@ import type {} from '@deepseek-ai/dsh-client-runtime/client'
 import { GenuiActionContext, type GenuiActionHandler } from './action-context.ts'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { GenuiBlock } from './GenuiBlock.tsx'
+import { GenuiSessionProvider } from './data-source.tsx'
 import { ErrorBoundary } from './ErrorBoundary.tsx'
 import { panelStateKey } from './interaction-store.ts'
 import { clearSessionPanel, getPanelExpandToken, getPanelSpec, setLocalPanel, subscribePanel, subscribePanelExpand } from './panel-store.ts'
@@ -176,11 +177,13 @@ export function GenuiPanel({ sessionId, sendGenuiAction }: GenuiPanelProps) {
             <ErrorBoundary label="面板">
               {/* content-fingerprinted: same panel spec re-published restores its state.
                   showTitle=false: the header above already carries the title. */}
-              <GenuiBlock
-                spec={spec}
-                stateKey={panelStateKey(sessionId, JSON.stringify(spec))}
-                showTitle={false}
-              />
+              <GenuiSessionProvider sessionId={sessionId}>
+                <GenuiBlock
+                  spec={spec}
+                  stateKey={panelStateKey(sessionId, JSON.stringify(spec))}
+                  showTitle={false}
+                />
+              </GenuiSessionProvider>
             </ErrorBoundary>
           </GenuiActionContext.Provider>
         </div>

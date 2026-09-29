@@ -99,7 +99,9 @@
     "check": "rm -rf lib && tsc -p tsconfig.json && vitest run && tsdown",
     "prepack": "node scripts/prepack.mjs",
     "verify:export": "tsx scripts/verify-export.mjs",
-    "verify:guard": "tsx scripts/verify-guard.mjs"
+    "verify:guard": "tsx scripts/verify-guard.mjs",
+    "verify:source": "tsx scripts/verify-source.mjs",
+    "verify:source-render": "tsx scripts/verify-source-render.mjs"
   },
   "dsh": {
     "bundle": {

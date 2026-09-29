@@ -1251,3 +1251,24 @@ button.ftNameBtn[aria-expanded] { cursor: pointer; }
   font-size: var(--dsl-g-font-data);
   color: var(--dsw-alias-label-tertiary);
 }
+
+/* ---------------- workspace data binding ---------------- */
+/* One-line status under a sourced data node: truncation, empty file, or the
+   failure that replaced the component. Muted for a note, red for an error —
+   neither is a component, so neither takes part in the block layout rhythm. */
+.sourceNote,
+.sourceError {
+  padding: var(--dsl-g-gap-sm) var(--dsl-g-gap-md);
+  border-radius: var(--dsl-g-radius-control);
+  font-size: var(--dsl-g-font-data);
+  line-height: 1.55;
+}
+.sourceNote {
+  color: var(--dsw-alias-label-tertiary);
+  background: var(--dsw-alias-bg-module-platform, rgba(127, 127, 127, 0.08));
+}
+.sourceError {
+  color: var(--dsw-static-red-400, #f87171);
+  background: color-mix(in srgb, var(--dsw-static-red-400, #f87171) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dsw-static-red-400, #f87171) 35%, transparent);
+}

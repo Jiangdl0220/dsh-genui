@@ -6,7 +6,8 @@
 import { Fragment, useState } from 'react'
 import css from '../GenuiBlock.module.css'
 import { GENUI_LIMITS } from '../guard.ts'
-import type { GenuiChart, GenuiHeatmap, GenuiTable } from '../spec.ts'
+import { useGenuiSession, useSource, type SourceTable } from '../data-source.tsx'
+import type { GenuiChart, GenuiChartDatum, GenuiHeatmap, GenuiTable } from '../spec.ts'
 
 const CHART_COLORS = [
   'var(--dsw-static-deepseek-400)',
@@ -23,8 +24,36 @@ const CHART_COLORS = [
 const seriesColor = (i: number, n: number, c?: string): string | undefined =>
   c ?? (n > 1 ? CHART_COLORS[i % CHART_COLORS.length] : undefined)
 export function TableNode({ node }: { node: GenuiTable }) {
-  const columns = node.columns.slice(0, GENUI_LIMITS.maxTableCols)
-  const rows = node.rows.slice(0, GENUI_LIMITS.maxTableRows)
+  // A `source` table carries no inline rows: load them, then render the same
+  // table body. TableNode itself calls no hooks, so the branch is safe.
+  if (node.source !== undefined) return <SourcedTable node={node} />
+  return <TableBody columns={node.columns} rows={node.rows} />
+}
+
+/** One-line note under a sourced node (truncation, empty file, failure). */
+function SourceNote({ text, tone }: { text: string; tone?: 'error' }) {
+  return <div className={tone === 'error' ? css.sourceError : css.sourceNote} role={tone === 'error' ? 'alert' : undefined}>{text}</div>
+}
+
+/** Table loaded from a workspace file. */
+function SourcedTable({ node }: { node: GenuiTable }) {
+  const sessionId = useGenuiSession()
+  const outcome = useSource<SourceTable>(sessionId, node.source, 'table')
+  const path = node.source?.path ?? ''
+  if (outcome === null) return <SourceNote text={`正在读取 ${path}…`} />
+  if (!outcome.ok) return <SourceNote tone="error" text={`无法从 ${path} 读取表格：${outcome.message}`} />
+  return (
+    <>
+      <TableBody columns={outcome.value.columns} rows={outcome.value.rows} />
+      {outcome.note !== undefined && <SourceNote text={outcome.note} />}
+    </>
+  )
+}
+
+/** The sortable table body (also the sink for a sourced table). */
+export function TableBody({ columns: rawColumns, rows: rawRows }: { columns: string[]; rows: Array<Array<string | number>> }) {
+  const columns = rawColumns.slice(0, GENUI_LIMITS.maxTableCols)
+  const rows = rawRows.slice(0, GENUI_LIMITS.maxTableRows)
   const [sort, setSort] = useState<{ col: number; dir: 1 | -1 } | null>(null)
   const sorted = sort === null
     ? rows
@@ -122,10 +151,34 @@ export function HeatmapNode({ node }: { node: GenuiHeatmap }) {
 
 /** Chart: bars (default), line (trend), or donut (share); multi-series bars via `series`. */
 export function ChartNode({ chart }: { chart: GenuiChart }) {
+  // A `source` chart loads its points, then renders through this same path
+  // (kind included). ChartNode calls no hooks itself.
+  if (chart.source !== undefined) return <SourcedChart chart={chart} />
   const kind = chart.kind ?? 'bars'
   if (kind === 'donut') return <DonutNode chart={chart} />
   if (kind === 'line') return <LineChartNode chart={chart} />
   return <BarsNode chart={chart} />
+}
+
+/** Chart whose points come from a workspace file. */
+function SourcedChart({ chart }: { chart: GenuiChart }) {
+  const sessionId = useGenuiSession()
+  const outcome = useSource<GenuiChartDatum[]>(sessionId, chart.source, 'chart')
+  const path = chart.source?.path ?? ''
+  if (outcome === null) return <SourceNote text={`正在读取 ${path}…`} />
+  if (!outcome.ok) return <SourceNote tone="error" text={`无法从 ${path} 读取图表数据：${outcome.message}`} />
+  if (outcome.value.length === 0) return <SourceNote text={outcome.note ?? `${path} 里没有可绘制的数据`} />
+  const resolved: GenuiChart = {
+    type: 'chart',
+    data: outcome.value,
+    ...(chart.kind === undefined ? {} : { kind: chart.kind }),
+  }
+  return (
+    <>
+      <ChartNode chart={resolved} />
+      {outcome.note !== undefined && <SourceNote text={outcome.note} />}
+    </>
+  )
 }
 
 /** Bars: one column per datum (grouped bars when `series` is present). */

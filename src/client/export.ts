@@ -80,6 +80,10 @@ function block(node: GenuiNode): string {
         ? `- ${item}`
         : `- **${item.title}**${item.desc === undefined ? '' : ` — ${item.desc}`}`).join('\n')
     case 'table': {
+      // A sourced table holds no rows in the spec (they arrive at render
+      // time), so the Markdown names the file instead of printing an empty
+      // table. The PNG export reads the rendered DOM and keeps the rows.
+      if (node.source !== undefined) return `> 表格数据来自 \`${node.source.path}\`（渲染时读取工作区文件）`
       const head = `| ${node.columns.map(cell).join(' | ')} |`
       const rule = `| ${node.columns.map(() => '---').join(' | ')} |`
       const body = node.rows.map((row) => `| ${row.map(cell).join(' | ')} |`).join('\n')
@@ -101,6 +105,7 @@ function block(node: GenuiNode): string {
         return [head, ...old, ...next].join('\n')
       }).join('\n'), 'diff')
     case 'chart': {
+      if (node.source !== undefined) return `${node.kind ?? 'bars'} 图：数据来自 \`${node.source.path}\`（渲染时读取工作区文件）`
       const columns = ['label', ...(node.series === undefined ? ['value'] : node.series.map((s) => s.label || 'value'))]
       const rows = node.series === undefined
         ? node.data.map((d) => [d.label, d.value])

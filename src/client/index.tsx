@@ -34,6 +34,7 @@ import { GenuiPanel, type GenuiPanelInjected } from './panel.tsx'
 import { GenuiToolView } from './toolview.tsx'
 import type { InputTriggerServiceContract } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
 import { assetUrl } from './asset-loader.ts'
+import { createWorkspaceReader, setGenuiSourceReader, type GenuiWorkspaceRemote } from './data-source.tsx'
 
 /** Host extension surface the registry channel needs (absent on pristine). */
 type HostFenceExt = {
@@ -146,6 +147,17 @@ export function apply(ctx: Context): () => void {
     order: 50,
     inject: (sessionId: SessionId): GenuiPanelInjected => panelActionSend(ctx, sessionId),
   }, GenuiPanel)))
+  // Data binding: `table`/`chart` nodes may name a workspace file instead of
+  // embedding rows. The reader is installed only while the host's
+  // `workspaceFiles` Remote namespace exists — a host without it keeps every
+  // other component working, and a sourced node degrades to one note line.
+  // Nested `ctx.inject` (never in the exported `inject`) on purpose: a
+  // missing namespace must not gate the fence renderer itself.
+  ctx.inject(['remote.workspaceFiles'], (scoped) => {
+    const remote = (scoped as unknown as { remote?: GenuiWorkspaceRemote }).remote
+    const release = setGenuiSourceReader(createWorkspaceReader(remote))
+    scoped.effect(() => release, 'genui: workspaceFiles reader')
+  })
   // /panel slash command: a deterministic, client-side entry point that
   // opens the panel dock (publishes the default spec + expand request),
   // clears it (/panel clear), or relays an instruction to the model

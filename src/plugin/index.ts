@@ -111,6 +111,7 @@ The spec is a white-listed component tree rendered inline where the fence sits. 
 - list: {"type":"list","items":["..."] or [{"title":"...","desc":"..."}]}
 - table: {"type":"table","columns":["..."],"rows":[["...","..."]]} — 表头点击本地排序（升/降/还原，数值感知）
 - chart: {"type":"chart","kind":"bars|line|donut","data":[{"label":"...","value":n,"color":"#hex?"}],"series":[...]?} — bars 默认；line 趋势；donut 占比；series=分组柱；负值柱高为 0 但标注照显；hover 显示精确值
+- source（table / chart 专用，替代内嵌数据）: {"type":"table","source":{"path":"data/sales.csv"}} · {"type":"chart","kind":"line","source":{"path":"data/run.csv","label":"日期","value":"耗时"}} — 渲染时从工作区文件加载，回复里只放引用，不放大表格/大数组。path 相对会话工作区；format 默认按后缀（.csv/.tsv/.json），CSV 首行是表头，chart 默认第 1 列做标签、第 2 列做数值，可用 label/value 指定列名，JSON 用 [{label,value}] 或 [数字]。上限：表 50 行×12 列、图 60 点，超出只显示前面部分并标注
 - tabs: {"type":"tabs","tabs":[{"label":"...","items":[...]}]} / accordion: {"type":"accordion","items":[{"title":"...","items":[...]}]}
 - avatar: {"type":"avatar","name":"..."}
 - plot: {"type":"plot","series":[{"expr":"sin(x)","label":"...","kind":"line|area|scatter"?,"params":[...]?}],"xMin":-5,"xMax":5,"yMin":?,"yMax":?,"title":"..."} — SVG 函数图（可拖拽平移/滚轮缩放；params 渲染实时滑块）；kind 缺省 line，area 填到基线，scatter 散点；表达式白名单 sin/cos/tan/asin/acos/atan/sqrt/cbrt/exp/log/ln/abs/floor/ceil/round/min/max/pow，常量 pi/e/tau，变量 x
@@ -131,6 +132,7 @@ Rules:
 - 围栏放在回答中该组件该在的位置，文字前后照常流动；不要把围栏套进别的代码围栏，JSON 字符串内不放 markdown。
 - Component choice (每个主题一个主组件): 结论/提醒→callout · 2–4 指标→grid+stat · 进度→progress · 多阶段→steps · 要点→list · 配置→keyvalue · 对比→table · 趋势→chart(line) · 占比→chart(donut) · 分类对比→chart(bars) · 矩阵密度→heatmap · 排期→gantt · 数学曲线→plot · 事件→timeline · 分页内容→tabs · 长内容→accordion · 树→file-tree · 代码→code · 文件变更→diff · 嵌套JSON→json · 架构/流程→mermaid · 仅几何内容→scene3d · 教学→quiz · 单操作→button(action)。优先 table/chart 而非文字堆砌；同一数据不重复出现在两个组件；每次回复 3–8 个组件，拿不准就少。
 - 语法: 坏围栏降级为代码块，保持 JSON 严格。≥3 节点或含 table 的围栏发出前调用 validate_dsh_ui 验证，❌ 则修好再发；若 ❌ 回复里附了「已自动修复」的 JSON，照抄即可。
+- 数据来源: 表格类数据（>15 行、或工作区里已有 CSV/JSON 文件）优先用 table/chart 的 source 引用文件，不要把几百行内嵌进围栏——内嵌会挤爆回复且容易写错；只用 source 时该节点不需要 columns/rows。文件读不到/格式不对时组件位置显示一行提示，不会破坏整块。
 - 主题: 内容适配暗色；UI 主题跟随 app，不要自造。规模: ≤200 节点、嵌套≤8 层（超出被截断）；3D 网格 1–5 个；plot 给合理 xMin/xMax。
 - v2 actions: button/input/select/checkbox/radio/switch/slider/textarea/quiz 可带 "action":"name"，交互以 [genui-action] name + 组件数据回传，届时重渲染更新 UI。可交互组件必须带 action（无 action 按钮禁用）；带 action 的按钮点击有「已触发」本地反馈。
 - LOCAL-FIRST: UI 自己能做的状态变化（判卷、判题、重置、展开、选中）全部就地完成，零模型往返；action 只用于必须模型参与的事（生成新内容、执行工具、下一步建议）。
